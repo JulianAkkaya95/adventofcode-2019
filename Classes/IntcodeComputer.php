@@ -67,14 +67,14 @@ class IntcodeComputer
     /**
      * Processes the given intcode, fetches the required instructions and parameters, executes the instructions and saves the results at a specified point.
      * @return void
-     * @throws \Exception if the opcode is not yet implemented
      */
     public function runIntcode()
     {
         $this->pointer = 0;
         while ($this->intCode[$this->pointer] != self::DONE) {
             $instruction = $this->getInstructions($this->intCode[$this->pointer]);
-            $parameters = $this->getParameter($this->numberOfParameters[$instruction["opcode"]]);
+            $t = $instruction["opcode"];
+            $parameters = $this->getParameter($this->numberOfParameters[$t]);
             switch ($instruction["opcode"]) {
                 case self::ADD:
                     $this->saveResult($parameters[0] + $parameters[1], $this->intCode[++$this->pointer]);
