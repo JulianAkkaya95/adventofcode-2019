@@ -3,10 +3,10 @@ use aco\Classes\IntcodeComputer\IntcodeComputer;
 
 require_once("../Classes/IntcodeComputer.php");
 
+$intCode = file_get_contents("Input.txt");
 $intcodeComputer = new IntcodeComputer();
 
 //part1
-$intCode = file_get_contents("Input.txt");
 $intcodeComputer->setIntCode($intCode);
 $intcodeComputer->setIntCode(12, 1);
 $intcodeComputer->setIntCode(2, 2);

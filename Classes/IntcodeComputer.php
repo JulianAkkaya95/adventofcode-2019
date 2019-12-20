@@ -15,23 +15,53 @@ class IntcodeComputer
      */
     const ADD = 1;
     const MULTIPLY = 2;
+    const INPUT = 3;
+    const OUTPUT = 4;
     const DONE = 99;
 
     private $numberOfParameters = [
-        self::ADD => 2,
-        self::MULTIPLY =>  2
+        self::ADD => 3,
+        self::MULTIPLY =>  3,
+        self::INPUT =>  1,
+        self::OUTPUT =>  1,
     ];
+
+    /**
+     * @var int
+     */
+    private $input;
+
+    /**
+     * @var array z.B. [1,12,5,0,99]
+     */
+    private $intCode;
 
     /**
      * @var array
      */
-    private $intCode;
+    private $output = [];
 
     /**
      * Points to the current position to be executed.
      * @var int
      */
     private $pointer = 0;
+
+    /**
+     * @return int
+     */
+    public function getInput(): int
+    {
+        return $this->input;
+    }
+
+    /**
+     * @param int $input
+     */
+    public function setInput(int $input): void
+    {
+        $this->input = $input;
+    }
 
     /**
      * Returns the complete intcode or a specific position of the intcode.
@@ -53,7 +83,7 @@ class IntcodeComputer
      * @param array | string $intCode z.B. 1,2,3,0,99 or [1,2,3,0,99] or 1
      * @param null $position
      */
-    public function setIntCode($intCode, $position = NULL)
+    public function setIntCode($intCode, $position = NULL) : void
     {
         if(is_array($intCode)) {
             $this->intCode = $intCode;
@@ -65,22 +95,48 @@ class IntcodeComputer
     }
 
     /**
-     * Processes the given intcode, fetches the required instructions and parameters, executes the instructions and saves the results at a specified point.
+     * @param int $output
+     */
+    public function setOutput(int $output): void
+    {
+        array_push($this->output, $output);
+    }
+
+    /**
+     * @return array
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * Processes the given intcode, fetches the required instructions and parameters,
+     * executes the instructions and saves the results at a specified point.
      * @return void
      */
-    public function runIntcode()
+    public function runIntcode() :void
     {
         $this->pointer = 0;
         while ($this->intCode[$this->pointer] != self::DONE) {
             $instruction = $this->getInstructions($this->intCode[$this->pointer]);
-            $t = $instruction["opcode"];
-            $parameters = $this->getParameter($this->numberOfParameters[$t]);
+            $parameters = $this->getParameter(
+                $this->numberOfParameters[$instruction["opcode"]],
+                $instruction["parameterModes"]
+            );
             switch ($instruction["opcode"]) {
                 case self::ADD:
-                    $this->saveResult($parameters[0] + $parameters[1], $this->intCode[++$this->pointer]);
+                    $this->saveResult($parameters[0] + $parameters[1], $parameters[2]);
                     break;
                 case self::MULTIPLY:
-                    $this->saveResult($parameters[0] * $parameters[1], $this->intCode[++$this->pointer]);
+                    $this->saveResult($parameters[0] * $parameters[1], $parameters[2]);
+                    break;
+                case self::INPUT:
+                    $this->saveResult($this->input, $parameters[0]);
+                    break;
+                case self::OUTPUT:
+                    //We don't want to output the memory address but the variable behind it.
+                    $this->setOutput($this->intCode[$parameters[0]]);
                     break;
             }
             $this->pointer++;
@@ -88,16 +144,26 @@ class IntcodeComputer
     }
 
     /**
-     * Gets the parameters required for an instruction.
+     * Gets the parameters required for an instruction. e.g. Parameter1, Parameter2, memory address
      * @param $numbersOfParameters int z.B. 2
+     * @param $parameterModes array z.B. [0,1,1,0]
      * @return array z.B. [1, 5, 10]
      */
-    private function getParameter($numbersOfParameters)
+    private function getParameter($numbersOfParameters, $parameterModes)
     {
+        //The parameter modes are stored from right to left, which is why they are run from back to front.
+        $k = count($parameterModes) -1;
         $parametersAsArray = [];
-        for ($j = 0; $j < $numbersOfParameters; $j++) {
-            array_push($parametersAsArray, $this->intCode[$this->intCode[++$this->pointer]]);
+        for ($j = 0; $j < $numbersOfParameters - 1; $j++) {
+            if(!isset($parameterModes[$k]) || $parameterModes[$k] == 0 || empty($parameterModes[$k] || $j == $numbersOfParameters -1)) {
+                array_push($parametersAsArray, $this->intCode[$this->intCode[++$this->pointer]]);
+            } else {
+                array_push($parametersAsArray, (int) $this->intCode[++$this->pointer]);
+            }
+            $k--;
         }
+        //The position at which you want to save only needs the memory address and not the variable behind it.
+        array_push($parametersAsArray, (int) $this->intCode[++$this->pointer]);
         return $parametersAsArray;
     }
 
@@ -120,7 +186,8 @@ class IntcodeComputer
     private function getInstructions( int $code)
     {
         return [
-            "opcode" => substr($code, -2),
+            "opcode" => (int) substr($code, -2),
+            "parameterModes" => str_split(substr($code,0,-2))
         ];
     }
 }
