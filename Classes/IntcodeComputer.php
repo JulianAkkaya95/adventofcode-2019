@@ -21,9 +21,9 @@ class IntcodeComputer
 
     private $numberOfParameters = [
         self::ADD => 3,
-        self::MULTIPLY =>  3,
-        self::INPUT =>  1,
-        self::OUTPUT =>  1,
+        self::MULTIPLY => 3,
+        self::INPUT => 1,
+        self::OUTPUT => 1,
     ];
 
     /**
@@ -68,7 +68,7 @@ class IntcodeComputer
      * @param int $position
      * @return mixed
      */
-    public function getIntCode( int $position = NULL)
+    public function getIntCode(int $position = NULL)
     {
         if ($position === NULL) {
             $result = $this->intCode;
@@ -83,14 +83,14 @@ class IntcodeComputer
      * @param array | string $intCode z.B. 1,2,3,0,99 or [1,2,3,0,99] or 1
      * @param null $position
      */
-    public function setIntCode($intCode, $position = NULL) : void
+    public function setIntCode($intCode, $position = NULL): void
     {
-        if(is_array($intCode)) {
+        if (is_array($intCode)) {
             $this->intCode = $intCode;
         } elseif ($position !== NULL && is_int($intCode)) {
             $this->intCode[$position] = $intCode;
-        } elseif(!is_array($intCode) && $position === NULL)  {
-            $this->intCode = explode(",", (string) $intCode);
+        } elseif (!is_array($intCode) && $position === NULL) {
+            $this->intCode = explode(",", (string)$intCode);
         }
     }
 
@@ -103,11 +103,16 @@ class IntcodeComputer
     }
 
     /**
-     * @return array
+     * @return array | int
      */
-    public function getOutput()
+    public function getOutput($position = NULL)
     {
-        return $this->output;
+        if(isset($position)) {
+            $result = $this->output[$position];
+        } else {
+            $result = $this->output;
+        }
+        return $result;
     }
 
     /**
@@ -115,7 +120,7 @@ class IntcodeComputer
      * executes the instructions and saves the results at a specified point.
      * @return void
      */
-    public function runIntcode() :void
+    public function runIntcode(): void
     {
         $this->pointer = 0;
         while ($this->intCode[$this->pointer] != self::DONE) {
@@ -152,18 +157,18 @@ class IntcodeComputer
     private function getParameter($numbersOfParameters, $parameterModes)
     {
         //The parameter modes are stored from right to left, which is why they are run from back to front.
-        $k = count($parameterModes) -1;
+        $k = count($parameterModes) - 1;
         $parametersAsArray = [];
         for ($j = 0; $j < $numbersOfParameters - 1; $j++) {
-            if(!isset($parameterModes[$k]) || $parameterModes[$k] == 0 || empty($parameterModes[$k] || $j == $numbersOfParameters -1)) {
+            if (!isset($parameterModes[$k]) || $parameterModes[$k] == 0 || empty($parameterModes[$k] || $j == $numbersOfParameters - 1)) {
                 array_push($parametersAsArray, $this->intCode[$this->intCode[++$this->pointer]]);
             } else {
-                array_push($parametersAsArray, (int) $this->intCode[++$this->pointer]);
+                array_push($parametersAsArray, (int)$this->intCode[++$this->pointer]);
             }
             $k--;
         }
         //The position at which you want to save only needs the memory address and not the variable behind it.
-        array_push($parametersAsArray, (int) $this->intCode[++$this->pointer]);
+        array_push($parametersAsArray, (int)$this->intCode[++$this->pointer]);
         return $parametersAsArray;
     }
 
@@ -173,7 +178,7 @@ class IntcodeComputer
      * @param int $positionForSaving z.B. 0
      * @return void
      */
-    private function saveResult(int $result, int $positionForSaving) :void
+    private function saveResult(int $result, int $positionForSaving): void
     {
         $this->intCode[$positionForSaving] = $result;
     }
@@ -183,11 +188,11 @@ class IntcodeComputer
      * @param int $code z.B. 10002
      * @return array z.B. ["opcode" => 02]
      */
-    private function getInstructions( int $code)
+    private function getInstructions(int $code)
     {
         return [
-            "opcode" => (int) substr($code, -2),
-            "parameterModes" => str_split(substr($code,0,-2))
+            "opcode" => (int)substr($code, -2),
+            "parameterModes" => str_split(substr($code, 0, -2))
         ];
     }
 }

@@ -1,8 +1,13 @@
 <?php
+namespace adc\part1;
+
+require  __DIR__.'/../vendor/autoload.php';
+require_once("../Classes/IntcodeComputer.php");
 
 use aco\Classes\IntcodeComputer\IntcodeComputer;
 
-require_once("../Classes/IntcodeComputer.php");
+
+
 
 $intCode = file_get_contents("Input.txt");
 $intcodeComputer = new IntcodeComputer();
